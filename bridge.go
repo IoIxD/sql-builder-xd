@@ -3,7 +3,11 @@ package main
 // #cgo CFLAGS: -g -Wall
 // #cgo LDFLAGS: ./native/libnative.a -ldl
 // #include "native/sql_builder_rs.h"
+// #include <stdlib.h>
 import "C"
+import (
+	"unsafe"
+)
 
 type SqlBuilderStart struct{}
 
@@ -11,10 +15,29 @@ func NewSqlBuilder() *SqlBuilderStart {
 	return &SqlBuilderStart{}
 }
 
-func (*SqlBuilderStart) SelectFrom(table string) {
-	st := C.CString(table)
-	h := C.new_rust_string(st)
-	C.new_sql_builder_select_from(h)
+type SqlBuilder struct {
+	ptr *C.SqlBuilder
+}
+
+func (*SqlBuilderStart) SelectFrom(table string) *SqlBuilder {
+	st, _ := C.CString(table)
+	s := C.new_sql_builder_select_from((*C.int8_t)(unsafe.Pointer(st)))
+	C.free(unsafe.Pointer(st))
+	return &SqlBuilder{s}
+}
+
+func (*SqlBuilderStart) SelectValues(values []string) *SqlBuilder {
+	vals := make([]*C.int8_t, len(values))
+	for i, v := range values {
+		st, _ := C.CString(v)
+		vals[i] = (*C.int8_t)(st)
+	}
+	s := C.new_sql_builder_select_values((**C.int8_t)(&vals[0]), (C.ulong)(len(values)))
+	for _, v := range vals {
+		C.free(unsafe.Pointer(v))
+
+	}
+	return &SqlBuilder{s}
 }
 
 /*
