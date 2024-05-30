@@ -1,5 +1,9 @@
 package main
 
+import "fmt"
+
 func main() {
-	NewSqlBuilder().SelectFrom("radical")
+	query, err := NewSqlBuilder().SelectFrom("two").SQL()
+	fmt.Println(err)
+	fmt.Println(query)
 }

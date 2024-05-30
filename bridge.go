@@ -6,6 +6,7 @@ package main
 // #include <stdlib.h>
 import "C"
 import (
+	"fmt"
 	"unsafe"
 )
 
@@ -29,14 +30,43 @@ func (*SqlBuilderStart) SelectFrom(table string) *SqlBuilder {
 func (*SqlBuilderStart) SelectValues(values []string) *SqlBuilder {
 	vals := make([]*C.int8_t, len(values))
 	for i, v := range values {
-		st, _ := C.CString(v)
-		vals[i] = (*C.int8_t)(st)
+		vals[i] = (*C.int8_t)(C.CString(v))
 	}
 	s := C.new_sql_builder_select_values((**C.int8_t)(&vals[0]), (C.ulong)(len(values)))
 	for _, v := range vals {
 		C.free(unsafe.Pointer(v))
 	}
 	return &SqlBuilder{s}
+}
+
+func (*SqlBuilderStart) InsertInto(table string) *SqlBuilder {
+	st := C.CString(table)
+	s := C.new_sql_builder_insert_into((*C.int8_t)(unsafe.Pointer(st)))
+	C.free(unsafe.Pointer(st))
+	return &SqlBuilder{s}
+}
+
+func (*SqlBuilderStart) UpdateTable(table string) *SqlBuilder {
+	st := C.CString(table)
+	s := C.new_sql_builder_update_table((*C.int8_t)(unsafe.Pointer(st)))
+	C.free(unsafe.Pointer(st))
+	return &SqlBuilder{s}
+}
+
+func (*SqlBuilderStart) DeleteFrom(table string) *SqlBuilder {
+	st := C.CString(table)
+	s := C.new_sql_builder_delete_from((*C.int8_t)(unsafe.Pointer(st)))
+	C.free(unsafe.Pointer(st))
+	return &SqlBuilder{s}
+}
+
+func (s *SqlBuilder) SQL() (string, error) {
+	fmt.Println("one")
+	st := C.sql_builder_sql(s.ptr)
+	if st == nil {
+		return "", fmt.Errorf("%s", C.GoString((*C.char)(unsafe.Pointer(C.get_error()))))
+	}
+	return C.GoString((*C.char)(unsafe.Pointer(st))), nil
 }
 
 /*

@@ -8,7 +8,7 @@ typedef struct SqlBuilder
   void *inner;
 } SqlBuilder;
 
-extern uint8_t *RUST_ERROR;
+uint8_t *get_error();
 
 SqlBuilder *new_sql_builder_select_from(int8_t *table);
 
