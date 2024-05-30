@@ -20,7 +20,7 @@ type SqlBuilder struct {
 }
 
 func (*SqlBuilderStart) SelectFrom(table string) *SqlBuilder {
-	st, _ := C.CString(table)
+	st := C.CString(table)
 	s := C.new_sql_builder_select_from((*C.int8_t)(unsafe.Pointer(st)))
 	C.free(unsafe.Pointer(st))
 	return &SqlBuilder{s}
@@ -35,7 +35,6 @@ func (*SqlBuilderStart) SelectValues(values []string) *SqlBuilder {
 	s := C.new_sql_builder_select_values((**C.int8_t)(&vals[0]), (C.ulong)(len(values)))
 	for _, v := range vals {
 		C.free(unsafe.Pointer(v))
-
 	}
 	return &SqlBuilder{s}
 }
